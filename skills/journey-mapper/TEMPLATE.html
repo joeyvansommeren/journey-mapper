@@ -1,0 +1,1247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Journey Maps</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #f5f5f4;
+    --panel: #fafaf9;
+    --panel-2: #fafaf9;
+    --panel-3: #f5f5f4;
+    --border: #e7e5e4;
+    --border-strong: #d6d3d1;
+    --divider: #a8a29e;
+    --text: #1c1917;
+    --muted: #78716c;
+    --muted-2: #a8a29e;
+    --accent: #fcd34d;
+    --accent-soft: #fef3c7;
+    --green: #15803d;
+    --red: #b91c1c;
+    --focus: #fbbf24;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  textarea, input, button { font-family: inherit; color: inherit; }
+
+  .app {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 16px;
+    padding: 20px;
+    min-height: 100vh;
+    max-width: 1900px;
+    margin: 0 auto;
+  }
+
+  /* Left rail */
+  .rail {
+    position: sticky;
+    top: 20px;
+    align-self: start;
+    max-height: calc(100vh - 40px);
+    overflow: auto;
+    background: var(--bg);
+    border: none;
+    border-right: 1px solid var(--border);
+    border-radius: 0;
+    padding: 14px;
+  }
+  .rail h1 {
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+  .rail .tagline {
+    font-size: 12px;
+    color: var(--muted);
+    margin: 0 0 14px 0;
+  }
+  .toolbar {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .tool-btn {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 9px;
+    font-size: 11px;
+    cursor: pointer;
+    flex: 1;
+    min-width: 0;
+    transition: border-color 150ms ease, background 150ms ease;
+  }
+  .tool-btn:hover { color: var(--text); border-color: var(--border-strong); background: var(--panel); }
+  .save-status {
+    font-size: 11px;
+    color: var(--muted-2);
+    margin-bottom: 14px;
+    min-height: 14px;
+  }
+  .save-status.flash { color: var(--green); }
+
+  .category-header {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    padding: 12px 2px 4px 2px;
+  }
+  .category-header:first-of-type { padding-top: 0; }
+  .journey-item {
+    background: transparent;
+    border: none;
+    border-left: 3px solid transparent;
+    border-radius: 0;
+    padding: 8px 10px;
+    text-align: left;
+    color: var(--text);
+    cursor: pointer;
+    font-size: 13px;
+    width: 100%;
+    margin-bottom: 2px;
+    transition: border-color 150ms ease, background 150ms ease;
+  }
+  .journey-item:hover { background: var(--border); }
+  .journey-item.active {
+    border-left-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .journey-item .j-title { font-weight: 600; }
+  .journey-item .j-actor {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* Main work area */
+  .main {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-width: 0;
+  }
+  .journey-header {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+  }
+  .journey-header h2 {
+    margin: 0 0 4px 0;
+    font-size: clamp(26px, 3vw, 36px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+  .journey-header .actor-line {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 18px;
+  }
+  .actor-chip {
+    display: inline-block;
+    font-size: 11px;
+    color: var(--text);
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    padding: 1px 7px;
+    border-radius: 4px;
+    margin-left: 4px;
+  }
+  .header-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .field-block label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .field-block textarea {
+    width: 100%;
+    min-height: 50px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    resize: vertical;
+    transition: border-color 150ms ease;
+  }
+  .field-block textarea:focus { outline: none; border-color: var(--focus); }
+  .field-block textarea::placeholder { color: var(--muted-2); }
+
+  /* Grid */
+  .grid-wrap {
+    background: var(--panel);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    padding: 14px;
+    overflow-x: auto;
+  }
+  .grid {
+    display: grid;
+    --label-col: 130px;
+    --moment-col: 260px;
+    grid-template-columns: var(--label-col) repeat(var(--moments, 1), var(--moment-col));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    width: max-content;
+    min-width: 100%;
+  }
+  .cell {
+    background: var(--panel);
+    padding: 10px 11px;
+    min-width: 0;
+  }
+  .cell.label {
+    background: var(--panel-3);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+  }
+  .cell.label .accent-dot {
+    display: none;
+  }
+  .cell.stage {
+    background: var(--panel-3);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 8px 11px;
+    text-align: center;
+    border-left: 1px solid var(--border);
+  }
+  .cell.moment-header {
+    background: var(--panel-3);
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text);
+    padding: 10px 11px;
+  }
+  .cell.moment-header .moment-num {
+    display: inline-block;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--text);
+    font-size: 10.5px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 18px;
+    margin-right: 6px;
+  }
+
+  .cell.readonly {
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .cell.readonly .empty { color: var(--muted-2); font-style: italic; font-size: 12px; }
+
+  /* Per-row semantic colours */
+  .cell[data-row="row-pain"] { color: var(--red); }
+  .cell[data-row="row-pain"] textarea { color: var(--red); }
+  .cell[data-row="row-oppty"] { color: var(--green); }
+  .cell[data-row="row-oppty"] textarea { color: var(--green); }
+  /* Service blueprint rows: subtly greyer */
+  .cell[data-row="row-front"],
+  .cell[data-row="row-back"],
+  .cell[data-row="row-supp"] { background: var(--panel-3); }
+
+  .cell textarea {
+    width: 100%;
+    min-height: 120px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 7px 9px;
+    font-size: 13px;
+    line-height: 1.5;
+    resize: vertical;
+    transition: border-color 150ms ease;
+  }
+  .cell textarea:focus { outline: none; border-color: var(--focus); }
+  .cell textarea::placeholder { color: var(--muted-2); }
+
+  /* Divider rows */
+  .cell.divider {
+    background: transparent;
+    grid-column: 1 / -1;
+    padding: 6px 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .cell.divider .line {
+    flex: 1;
+    height: 1px;
+    background: var(--border-strong);
+  }
+  .cell.divider .label-text {
+    font-size: 10.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* Feeling cells */
+  .feeling-picker {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .feeling-btn {
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--border);
+    background: #ffffff;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 17px;
+    line-height: 1;
+    padding: 0;
+    transition: border-color 150ms ease, background 150ms ease, opacity 150ms ease;
+    opacity: 0.45;
+  }
+  .feeling-btn:hover { border-color: var(--border-strong); opacity: 0.7; }
+  .feeling-btn.selected {
+    border-color: var(--focus);
+    background: var(--accent-soft);
+    opacity: 1;
+  }
+
+  /* Emotion curve */
+  .curve-wrap {
+    background: transparent;
+    border: none;
+    border-top: 1px solid var(--border);
+    border-radius: 0;
+    padding: 16px 0;
+  }
+  .curve-wrap h3 {
+    margin: 0 0 4px 0;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .curve-wrap .curve-empty {
+    color: var(--muted-2);
+    font-size: 13px;
+    font-style: italic;
+    padding: 18px 0;
+    text-align: center;
+  }
+  .curve-svg {
+    width: 100%;
+    height: 110px;
+    display: block;
+  }
+  .curve-svg .grid-line { stroke: var(--border); stroke-width: 1; }
+  .curve-svg .axis-label { fill: var(--muted-2); font-size: 9.5px; }
+  .curve-svg .curve-path { fill: none; stroke: #292524; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .curve-svg .curve-area { fill: rgba(252,211,77,0.15); stroke: none; }
+  .curve-svg .curve-pt { fill: var(--accent); stroke: #292524; stroke-width: 2; }
+
+  /* Free-form notes */
+  .notes-block {
+    background: transparent;
+    border: none;
+    border-top: 1px solid var(--border);
+    border-radius: 0;
+    padding: 16px 0;
+  }
+  .notes-block label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .notes-block textarea {
+    width: 100%;
+    min-height: 90px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 14px;
+    line-height: 1.5;
+    resize: vertical;
+  }
+  .notes-block textarea:focus { outline: none; border-color: var(--focus); }
+  .notes-block textarea::placeholder { color: var(--muted-2); }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+
+  /* Help modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(28,25,23,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 200ms ease;
+  }
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    padding: 28px 32px;
+    max-width: 580px;
+    width: calc(100% - 40px);
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+    box-shadow: 0 8px 24px rgba(28,25,23,0.12);
+    transform: translateY(8px);
+    transition: transform 200ms ease;
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .modal-header h2 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+  .modal-close {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    flex-shrink: 0;
+    transition: border-color 150ms ease, color 150ms ease;
+  }
+  .modal-close:hover { color: var(--text); border-color: var(--border-strong); }
+  .modal h3 {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 20px 0 8px 0;
+  }
+  .modal h3:first-of-type { margin-top: 0; }
+  .modal p {
+    margin: 0 0 8px 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .modal p strong { color: var(--text); font-weight: 600; }
+  .modal ul {
+    margin: 0 0 10px 0;
+    padding-left: 18px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .modal ul li strong { color: var(--text); }
+  .modal .chip-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  .modal .chip {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border-strong);
+    background: var(--panel);
+    color: var(--text);
+  }
+  .modal .chip.cyan,
+  .modal .chip.violet,
+  .modal .chip.orange,
+  .modal .chip.blue { color: var(--text); border-color: var(--border-strong); }
+  .modal .chip.pink { color: var(--red); border-color: var(--border-strong); }
+  .modal .chip.green { color: var(--green); border-color: var(--border-strong); }
+  .modal .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 16px 0;
+  }
+  .help-btn {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 9px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: border-color 150ms ease, color 150ms ease;
+  }
+  .help-btn:hover { color: var(--text); border-color: var(--border-strong); }
+</style>
+</head>
+<body>
+
+<!-- Help modal -->
+<div class="modal-overlay" id="help-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-header">
+      <h2 id="modal-title">How to use Journey Maps</h2>
+      <button class="modal-close" id="help-modal-close" aria-label="Close">&#x2715;</button>
+    </div>
+
+    <h3>What this is</h3>
+    <p>An NN/g customer journey map and service blueprint combined into a single grid — one per user journey. The top half is the customer view; the bottom half is the service layer. Both share the same columns (stages and moments).</p>
+
+    <hr class="divider" />
+
+    <h3>Navigating journeys</h3>
+    <p>Select any journey from the left rail. Journeys are grouped by category.</p>
+
+    <hr class="divider" />
+
+    <h3>Reading the grid</h3>
+    <p>Columns are <strong>stages</strong>, each containing one or more <strong>moments</strong>. Within each moment column, rows are stacked top-to-bottom:</p>
+    <div class="chip-row">
+      <span class="chip cyan">Doing</span>
+      <span class="chip violet">Thinking</span>
+      <span class="chip orange">Feeling</span>
+      <span class="chip pink">Pain points</span>
+      <span class="chip green">Opportunities</span>
+      <span class="chip blue">Evidence</span>
+    </div>
+    <p>A <strong>line of interaction</strong> separates the customer journey from the service blueprint. Below it:</p>
+    <div class="chip-row">
+      <span class="chip cyan">Frontstage</span>
+      <span class="chip violet">Backstage</span>
+      <span class="chip">Support processes</span>
+    </div>
+
+    <hr class="divider" />
+
+    <h3>What you can edit</h3>
+    <ul>
+      <li><strong>Scenario & User goal</strong> — editable in the journey header. Your changes shadow the built-in defaults.</li>
+      <li><strong>Thinking</strong> — free-text per moment. What is the user asking themselves at this point?</li>
+      <li><strong>Feeling</strong> — pick one emoji per moment. Drives the emotion curve below the grid.</li>
+      <li><strong>Pain points & Opportunities</strong> — your research findings. One item per line works well.</li>
+      <li><strong>Evidence</strong> — link to a source: an insight, a session recording, a ticket ID.</li>
+      <li><strong>Notes</strong> — a full-width freeform textarea below the grid for anything that doesn't fit a cell.</li>
+    </ul>
+    <p>The <strong>Doing, Frontstage, Backstage, and Support</strong> rows are pre-filled and read-only in the UI. Their content lives in the JSON block at the bottom of the file; edit the JSON directly to change them.</p>
+
+    <hr class="divider" />
+
+    <h3>Emotion curve</h3>
+    <p>As soon as two or more moments in a journey have a feeling set, a curve renders automatically below the grid. It traces sentiment across stages so you can spot where the journey dips.</p>
+
+    <hr class="divider" />
+
+    <h3>Saving & sharing</h3>
+    <ul>
+      <li><strong>Autosave</strong> — every edit saves to <em>this browser's</em> localStorage after a 350 ms pause. The rail shows "Saved" when it commits.</li>
+      <li><strong>Export</strong> — downloads a timestamped JSON of all annotations. Back it up or send it to a teammate.</li>
+      <li><strong>Import</strong> — loads a JSON file. You'll be asked whether to <em>replace</em> your local state or <em>merge</em> a colleague's annotations into yours (safe for collaboration).</li>
+    </ul>
+
+    <hr class="divider" />
+
+    <h3>Keyboard shortcut</h3>
+    <p>Press <strong>?</strong> anywhere on the page to open or close this guide.</p>
+  </div>
+</div>
+
+<div class="app">
+
+  <aside class="rail">
+    <h1>Journey Maps</h1>
+    <p class="tagline">NN/g customer journey + service blueprint, per journey. Edits autosave to this browser.</p>
+    <div class="toolbar">
+      <button class="tool-btn" id="export-btn">Export</button>
+      <button class="tool-btn" id="import-btn">Import</button>
+      <button class="help-btn" id="help-btn" title="How to use this tool">?</button>
+    </div>
+    <div class="save-status" id="save-status"></div>
+    <input type="file" id="import-file" accept="application/json" style="display:none" />
+    <div id="journey-list"></div>
+  </aside>
+
+  <main class="main" id="main">
+    <div class="empty-main">Pick a journey on the left.</div>
+  </main>
+</div>
+
+<!--
+  Schema:
+    actors[]    : { id, name, description }
+    categories[]: { id, title }
+    journeys[]  : {
+      id, title, actor, category, scenario, goal,
+      stages[] : {
+        title,
+        moments[] : { id, title, doing?, frontstage?, backstage?, support?, thinking?, pain?, opportunity?, evidence?, feeling? }
+      }
+    }
+
+  Stable ids on moments are required — annotations are keyed by moment id.
+  Prefix a cell value with [Assumption] to flag it as unvalidated.
+-->
+<script type="application/json" id="journeys-data">
+{
+  "actors": [
+    { "id": "customer",  "name": "Customer",      "description": "A registered user of the product." },
+    { "id": "new-user",  "name": "New user",      "description": "Someone signing up for the first time." }
+  ],
+
+  "categories": [
+    { "id": "onboarding", "title": "Onboarding" },
+    { "id": "core",       "title": "Core workflow" }
+  ],
+
+  "journeys": [
+    {
+      "id": "sign-up",
+      "title": "Sign up for an account",
+      "actor": "new-user",
+      "category": "onboarding",
+      "scenario": "A prospective user has heard about the product and wants to create an account to try it out.",
+      "goal": "Get from zero to a working account with access to the dashboard.",
+      "stages": [
+        {
+          "title": "Discover",
+          "moments": [
+            {
+              "id": "land-page",
+              "title": "Lands on the signup page",
+              "doing": "Arrives from a marketing link or referral and sees the signup form.",
+              "thinking": "[Assumption] Is this going to take long? Can I look around first?",
+              "feeling": 3,
+              "pain": "[Assumption] No preview of the product before committing to an account.",
+              "opportunity": "Offer a quick tour or sandbox before requiring signup.",
+              "evidence": "",
+              "frontstage": "Signup form with email, name, and password fields.",
+              "backstage": "Static page served from CDN. No API calls yet.",
+              "support": "CDN serves the static build."
+            },
+            {
+              "id": "submit-form",
+              "title": "Submits the signup form",
+              "doing": "Fills in their details and clicks Sign up.",
+              "thinking": "Another password to remember.",
+              "feeling": 3,
+              "pain": "",
+              "opportunity": "Support social login so users can skip the password step.",
+              "evidence": "",
+              "frontstage": "Loading spinner, then a confirmation message.",
+              "backstage": "Backend creates the user record and sends a verification email.",
+              "support": "Email service delivers the verification message."
+            }
+          ]
+        },
+        {
+          "title": "Verify",
+          "moments": [
+            {
+              "id": "verify-email",
+              "title": "Verifies their email",
+              "doing": "Opens the verification email and clicks the link or enters the code.",
+              "thinking": "[Assumption] Where is the email? Should I check spam?",
+              "feeling": 2,
+              "pain": "Email delivery can be slow; no clear fallback if it never arrives.",
+              "opportunity": "Magic link instead of code; visible resend countdown.",
+              "evidence": "",
+              "frontstage": "Verification code input or magic-link click.",
+              "backstage": "Backend validates the token and marks the account as verified.",
+              "support": "Email delivery service."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "first-task",
+      "title": "Complete the first task",
+      "actor": "customer",
+      "category": "core",
+      "scenario": "A verified user logs in for the first time and wants to accomplish the product's core action.",
+      "goal": "Successfully complete one end-to-end task and see the result.",
+      "stages": [
+        {
+          "title": "Orient",
+          "moments": [
+            {
+              "id": "empty-state",
+              "title": "Sees the empty dashboard",
+              "doing": "Lands on the dashboard and looks for what to do next.",
+              "thinking": "OK, I'm in. Now what?",
+              "feeling": 3,
+              "pain": "Empty state offers little guidance.",
+              "opportunity": "Guided checklist with the two or three highest-value first steps.",
+              "evidence": "",
+              "frontstage": "Dashboard home with empty-state messaging.",
+              "backstage": "API returns empty collections for this new user.",
+              "support": "Backend API + database."
+            }
+          ]
+        },
+        {
+          "title": "Act",
+          "moments": [
+            {
+              "id": "create-item",
+              "title": "Creates their first item",
+              "doing": "Clicks the primary action button and fills in the creation form.",
+              "thinking": "Let me try the main thing this product does.",
+              "feeling": 4,
+              "pain": "",
+              "opportunity": "Pre-fill example data so the user can see a result immediately.",
+              "evidence": "",
+              "frontstage": "Creation form with fields and a submit button.",
+              "backstage": "Backend validates and persists the new item.",
+              "support": "Backend API + database."
+            },
+            {
+              "id": "see-result",
+              "title": "Sees the result",
+              "doing": "Views the newly created item in the dashboard.",
+              "thinking": "That worked. This might be useful.",
+              "feeling": 5,
+              "pain": "",
+              "opportunity": "Celebrate the first success with a brief confirmation.",
+              "evidence": "",
+              "frontstage": "Dashboard updates to show the new item.",
+              "backstage": "Real-time or polling update reflects the new data.",
+              "support": "Backend API."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+</script>
+
+<script>
+(function () {
+  const data = JSON.parse(document.getElementById("journeys-data").textContent);
+  const STORAGE_KEY = "journey-map-annotations";
+  const FEELINGS = [
+    { score: 1, emoji: "\u{1F621}", label: "Very frustrated" },
+    { score: 2, emoji: "\u{1F641}", label: "Frustrated" },
+    { score: 3, emoji: "\u{1F610}", label: "Neutral" },
+    { score: 4, emoji: "\u{1F642}", label: "Pleased" },
+    { score: 5, emoji: "\u{1F604}", label: "Delighted" }
+  ];
+
+  const actorById = Object.fromEntries(data.actors.map(a => [a.id, a]));
+
+  // ---- Storage ----
+  function loadAll() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch { return {}; }
+  }
+  function saveAll(state) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+  let state = loadAll();
+  function ensureJourneyState(jid) {
+    if (!state[jid]) state[jid] = { _meta: {}, moments: {} };
+    if (!state[jid].moments) state[jid].moments = {};
+    if (!state[jid]._meta) state[jid]._meta = {};
+    return state[jid];
+  }
+
+  let saveTimer = null;
+  const saveStatusEl = document.getElementById("save-status");
+  function flashSaved() {
+    saveStatusEl.textContent = "Saved · " + new Date().toLocaleTimeString();
+    saveStatusEl.classList.add("flash");
+    clearTimeout(flashSaved._t);
+    flashSaved._t = setTimeout(() => saveStatusEl.classList.remove("flash"), 1200);
+  }
+  function scheduleSave() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => { saveAll(state); flashSaved(); }, 350);
+  }
+
+  // ---- Journey list ----
+  const listEl = document.getElementById("journey-list");
+  const journeysByCategory = {};
+  data.journeys.forEach(j => {
+    (journeysByCategory[j.category] = journeysByCategory[j.category] || []).push(j);
+  });
+
+  let activeJourneyId = null;
+  data.categories.forEach(cat => {
+    const flows = journeysByCategory[cat.id];
+    if (!flows || !flows.length) return;
+    const h = document.createElement("div");
+    h.className = "category-header";
+    h.textContent = cat.title;
+    listEl.appendChild(h);
+    flows.forEach(j => {
+      const btn = document.createElement("button");
+      btn.className = "journey-item";
+      btn.dataset.id = j.id;
+      const actor = actorById[j.actor];
+      btn.innerHTML = `
+        <div class="j-title">${j.title}</div>
+        <div class="j-actor">${actor ? actor.name : ""}</div>
+      `;
+      btn.addEventListener("click", () => selectJourney(j.id));
+      listEl.appendChild(btn);
+    });
+  });
+
+  // ---- Render journey ----
+  const mainEl = document.getElementById("main");
+
+  function selectJourney(id) {
+    activeJourneyId = id;
+    document.querySelectorAll(".journey-item").forEach(el => {
+      el.classList.toggle("active", el.dataset.id === id);
+    });
+    const j = data.journeys.find(x => x.id === id);
+    if (!j) return;
+    renderJourney(j);
+  }
+
+  function renderJourney(j) {
+    const actor = actorById[j.actor] || {};
+    const jstate = ensureJourneyState(j.id);
+
+    // Flatten all moments to know total count
+    const allMoments = [];
+    j.stages.forEach(stage => {
+      stage.moments.forEach(m => {
+        allMoments.push({ stage, moment: m });
+      });
+    });
+
+    mainEl.innerHTML = "";
+
+    // Header block
+    const header = document.createElement("section");
+    header.className = "journey-header";
+    header.innerHTML = `
+      <h2>${j.title}</h2>
+      <div class="actor-line">Primary actor <span class="actor-chip">${actor.name || ""}</span></div>
+      <div class="header-fields">
+        <div class="field-block">
+          <label>Scenario</label>
+          <textarea data-meta="scenario" placeholder="Who is this user, what's bringing them here?"></textarea>
+        </div>
+        <div class="field-block">
+          <label>User goal</label>
+          <textarea data-meta="goal" placeholder="What does success look like for them?"></textarea>
+        </div>
+      </div>
+    `;
+    mainEl.appendChild(header);
+
+    // Prefill meta fields (use stored value if any, otherwise fall back to JSON's scenario/goal)
+    const scenarioTA = header.querySelector('[data-meta="scenario"]');
+    const goalTA = header.querySelector('[data-meta="goal"]');
+    scenarioTA.value = jstate._meta.scenario != null ? jstate._meta.scenario : (j.scenario || "");
+    goalTA.value     = jstate._meta.goal     != null ? jstate._meta.goal     : (j.goal     || "");
+    [scenarioTA, goalTA].forEach(ta => {
+      ta.addEventListener("input", () => {
+        jstate._meta[ta.dataset.meta] = ta.value;
+        scheduleSave();
+        autoSize(ta);
+      });
+      autoSize(ta);
+    });
+
+    // Grid
+    const gridWrap = document.createElement("section");
+    gridWrap.className = "grid-wrap";
+    const grid = document.createElement("div");
+    grid.className = "grid";
+    grid.style.setProperty("--moments", allMoments.length);
+    gridWrap.appendChild(grid);
+
+    // Row 1: Stage headers (with colspan via repeating cells -- each stage spans its moments count)
+    grid.appendChild(cell("label", "Stage"));
+    j.stages.forEach(stage => {
+      stage.moments.forEach((m, i) => {
+        const c = document.createElement("div");
+        c.className = "cell stage";
+        if (i === 0) c.textContent = stage.title;
+        if (i > 0) c.style.borderLeft = "none";
+        grid.appendChild(c);
+      });
+    });
+
+    // Row 2: Moment headers
+    grid.appendChild(cell("label", "Moment"));
+    let momentIdx = 0;
+    allMoments.forEach(({ moment }) => {
+      momentIdx++;
+      const c = document.createElement("div");
+      c.className = "cell moment-header";
+      c.innerHTML = `<span class="moment-num">${momentIdx}</span>${moment.title}`;
+      grid.appendChild(c);
+    });
+
+    // -------- Customer journey rows --------
+    addReadonlyRow(grid, allMoments, "Doing", "row-doing", m => m.doing);
+    addEditableRow(grid, j, allMoments, "Thinking", "row-think", "thinking", "What is going through their head?");
+    addFeelingRow(grid, j, allMoments);
+    addEditableRow(grid, j, allMoments, "Pain points", "row-pain", "pain", "What hurts here?");
+    addEditableRow(grid, j, allMoments, "Opportunities", "row-oppty", "opportunity", "What could we improve?");
+    addEditableRow(grid, j, allMoments, "Evidence", "row-evid", "evidence", "Artefacts they take away (email, doc, screen).");
+
+    // Divider -- line of interaction
+    addDivider(grid, "Line of interaction");
+
+    // -------- Service blueprint rows --------
+    addReadonlyRow(grid, allMoments, "Frontstage", "row-front", m => m.frontstage);
+    addDivider(grid, "Line of visibility");
+    addReadonlyRow(grid, allMoments, "Backstage", "row-back", m => m.backstage);
+    addDivider(grid, "Line of internal interaction");
+    addReadonlyRow(grid, allMoments, "Support processes", "row-supp", m => m.support);
+
+    mainEl.appendChild(gridWrap);
+
+    // Emotion curve
+    const curveWrap = document.createElement("section");
+    curveWrap.className = "curve-wrap";
+    curveWrap.innerHTML = `<h3>Emotion curve</h3><div id="curve-body"></div>`;
+    mainEl.appendChild(curveWrap);
+    renderCurve(j, allMoments);
+
+    // Notes
+    const notes = document.createElement("section");
+    notes.className = "notes-block";
+    notes.innerHTML = `
+      <label>Free-form notes for this journey</label>
+      <textarea data-meta="notes" placeholder="Hypotheses, research links, things to test, anything else."></textarea>
+    `;
+    const notesTA = notes.querySelector("textarea");
+    notesTA.value = jstate._meta.notes || "";
+    notesTA.addEventListener("input", () => {
+      jstate._meta.notes = notesTA.value;
+      scheduleSave();
+      autoSize(notesTA);
+    });
+    autoSize(notesTA);
+    mainEl.appendChild(notes);
+  }
+
+  function cell(extraClass, text) {
+    const c = document.createElement("div");
+    c.className = "cell " + (extraClass || "");
+    if (text != null) {
+      if (extraClass && extraClass.includes("label")) {
+        c.innerHTML = `<span class="accent-dot"></span>${text}`;
+      } else {
+        c.textContent = text;
+      }
+    }
+    return c;
+  }
+
+  function addReadonlyRow(grid, allMoments, labelText, rowColor, getter) {
+    const lbl = cell("label", labelText);
+    lbl.dataset.row = rowColor;
+    grid.appendChild(lbl);
+    allMoments.forEach(({ moment }) => {
+      const c = document.createElement("div");
+      c.className = "cell readonly";
+      c.dataset.row = rowColor;
+      const v = getter(moment);
+      if (v && v.trim()) c.textContent = v;
+      else c.innerHTML = `<span class="empty">—</span>`;
+      grid.appendChild(c);
+    });
+  }
+
+  function addEditableRow(grid, journey, allMoments, labelText, rowColor, field, placeholder) {
+    const lbl = cell("label", labelText);
+    lbl.dataset.row = rowColor;
+    grid.appendChild(lbl);
+    const jstate = ensureJourneyState(journey.id);
+    allMoments.forEach(({ moment }) => {
+      const c = document.createElement("div");
+      c.className = "cell";
+      c.dataset.row = rowColor;
+      const ta = document.createElement("textarea");
+      ta.placeholder = placeholder || "";
+      const mstate = jstate.moments[moment.id] = jstate.moments[moment.id] || {};
+      ta.value = mstate[field] != null ? mstate[field] : (moment[field] || "");
+      autoSize(ta);
+      ta.addEventListener("input", () => {
+        mstate[field] = ta.value;
+        scheduleSave();
+        autoSize(ta);
+      });
+      c.appendChild(ta);
+      grid.appendChild(c);
+    });
+  }
+
+  function addFeelingRow(grid, journey, allMoments) {
+    const lbl = cell("label", "Feeling");
+    grid.appendChild(lbl);
+    const jstate = ensureJourneyState(journey.id);
+    allMoments.forEach(({ moment }) => {
+      const c = document.createElement("div");
+      c.className = "cell";
+      const picker = document.createElement("div");
+      picker.className = "feeling-picker";
+      const mstate = jstate.moments[moment.id] = jstate.moments[moment.id] || {};
+      const effectiveFeeling = () => (mstate.feeling != null ? mstate.feeling : moment.feeling);
+      FEELINGS.forEach(f => {
+        const btn = document.createElement("button");
+        btn.className = "feeling-btn" + (effectiveFeeling() === f.score ? " selected" : "");
+        btn.title = f.label;
+        btn.textContent = f.emoji;
+        btn.addEventListener("click", () => {
+          const current = effectiveFeeling();
+          mstate.feeling = (current === f.score) ? null : f.score;
+          picker.querySelectorAll(".feeling-btn").forEach((b, i) => {
+            b.classList.toggle("selected", FEELINGS[i].score === effectiveFeeling());
+          });
+          scheduleSave();
+          renderCurve(journey, allMoments);
+        });
+        picker.appendChild(btn);
+      });
+      c.appendChild(picker);
+      grid.appendChild(c);
+    });
+  }
+
+  function addDivider(grid, text) {
+    const d = document.createElement("div");
+    d.className = "cell divider";
+    d.innerHTML = `<span class="line"></span><span class="label-text">${text}</span><span class="line"></span>`;
+    grid.appendChild(d);
+  }
+
+  function renderCurve(j, allMoments) {
+    const body = document.getElementById("curve-body");
+    if (!body) return;
+    body.innerHTML = "";
+    const jstate = ensureJourneyState(j.id);
+    const points = allMoments.map(({ moment }, i) => {
+      const stored = (jstate.moments[moment.id] || {}).feeling;
+      const f = stored != null ? stored : moment.feeling;
+      return f != null ? { x: i, score: f } : null;
+    });
+    const present = points.filter(Boolean);
+    if (present.length < 2) {
+      body.innerHTML = `<div class="curve-empty">Pick a feeling on at least two moments to see the curve.</div>`;
+      return;
+    }
+    const W = body.clientWidth || 800;
+    const H = 110;
+    const padL = 30, padR = 16, padT = 14, padB = 18;
+    const innerW = W - padL - padR;
+    const innerH = H - padT - padB;
+    const xFor = i => padL + (allMoments.length === 1 ? innerW/2 : (i / (allMoments.length - 1)) * innerW);
+    const yFor = score => padT + (1 - (score - 1) / 4) * innerH;
+
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "curve-svg");
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    svg.setAttribute("preserveAspectRatio", "none");
+
+    // Grid lines
+    [1, 2, 3, 4, 5].forEach(s => {
+      const y = yFor(s);
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("class", "grid-line");
+      line.setAttribute("x1", padL);
+      line.setAttribute("x2", W - padR);
+      line.setAttribute("y1", y);
+      line.setAttribute("y2", y);
+      svg.appendChild(line);
+      const lbl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      lbl.setAttribute("class", "axis-label");
+      lbl.setAttribute("x", 4);
+      lbl.setAttribute("y", y + 3);
+      lbl.textContent = FEELINGS[s-1].emoji;
+      svg.appendChild(lbl);
+    });
+
+    // Curve path through known points (skip nulls, draw straight segments between known)
+    let d = "";
+    let first = true;
+    points.forEach((p, i) => {
+      if (p == null) return;
+      const x = xFor(i);
+      const y = yFor(p.score);
+      d += (first ? "M" : " L") + " " + x.toFixed(1) + " " + y.toFixed(1);
+      first = false;
+    });
+    if (d) {
+      // Area fill under the curve
+      const firstPt = present[0];
+      const lastPt = present[present.length - 1];
+      const areaD = d + ` L ${xFor(lastPt.x).toFixed(1)} ${yFor(1).toFixed(1)} L ${xFor(firstPt.x).toFixed(1)} ${yFor(1).toFixed(1)} Z`;
+      const area = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      area.setAttribute("class", "curve-area");
+      area.setAttribute("d", areaD);
+      svg.appendChild(area);
+
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("class", "curve-path");
+      path.setAttribute("d", d);
+      svg.appendChild(path);
+    }
+
+    // Points
+    points.forEach((p, i) => {
+      if (p == null) return;
+      const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      c.setAttribute("class", "curve-pt");
+      c.setAttribute("cx", xFor(i));
+      c.setAttribute("cy", yFor(p.score));
+      c.setAttribute("r", 4);
+      svg.appendChild(c);
+    });
+
+    body.appendChild(svg);
+  }
+
+  function autoSize(ta) {
+    ta.style.height = "auto";
+    ta.style.height = Math.max(120, ta.scrollHeight + 2) + "px";
+  }
+
+  // ---- Toolbar ----
+  document.getElementById("export-btn").addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const stamp = new Date().toISOString().slice(0, 16).replace(":", "");
+    a.href = url;
+    a.download = `journey-annotations-${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  const importInput = document.getElementById("import-file");
+  document.getElementById("import-btn").addEventListener("click", () => importInput.click());
+  importInput.addEventListener("change", () => {
+    const file = importInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const incoming = JSON.parse(reader.result);
+        if (typeof incoming !== "object" || incoming === null) throw new Error("Not an object");
+        if (!confirm("Replace your current annotations with the imported file? (Cancel to merge instead.)")) {
+          // Merge per-journey
+          Object.keys(incoming).forEach(jid => {
+            const cur = ensureJourneyState(jid);
+            const inc = incoming[jid] || {};
+            cur._meta = Object.assign({}, cur._meta, inc._meta || {});
+            cur.moments = Object.assign({}, cur.moments, inc.moments || {});
+          });
+        } else {
+          state = incoming;
+        }
+        saveAll(state);
+        flashSaved();
+        if (activeJourneyId) {
+          const j = data.journeys.find(x => x.id === activeJourneyId);
+          if (j) renderJourney(j);
+        }
+      } catch (e) {
+        alert("Couldn't import: " + e.message);
+      } finally {
+        importInput.value = "";
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  // Auto-select first journey
+  if (data.journeys[0]) selectJourney(data.journeys[0].id);
+
+  // Help modal
+  const helpModal = document.getElementById("help-modal");
+  const helpBtn = document.getElementById("help-btn");
+  const helpClose = document.getElementById("help-modal-close");
+
+  function openHelp() { helpModal.classList.add("open"); }
+  function closeHelp() { helpModal.classList.remove("open"); }
+
+  helpBtn.addEventListener("click", openHelp);
+  helpClose.addEventListener("click", closeHelp);
+  helpModal.addEventListener("click", e => { if (e.target === helpModal) closeHelp(); });
+  document.addEventListener("keydown", e => {
+    if (e.key === "?" && !e.target.matches("input, textarea")) openHelp();
+    if (e.key === "Escape") closeHelp();
+  });
+})();
+</script>
+
+</body>
+</html>

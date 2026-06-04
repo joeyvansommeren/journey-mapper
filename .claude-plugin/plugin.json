@@ -1,0 +1,8 @@
+{
+  "name": "journey-mapper",
+  "description": "Scans a codebase and generates a self-contained HTML service-design journey map using the NN/g combined customer journey + service blueprint format.",
+  "version": "1.0.0",
+  "author": "Joey van Sommeren",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/joeyvansommeren/journey-mapper"
+}
