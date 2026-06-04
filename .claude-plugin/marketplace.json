@@ -1,0 +1,14 @@
+{
+  "name": "journey-mapper",
+  "description": "Service design journey mapping skills for Claude Code",
+  "author": "Joey van Sommeren",
+  "repository": "https://github.com/joeyvansommeren/journey-mapper",
+  "plugins": [
+    {
+      "name": "journey-mapper",
+      "description": "Scans a codebase and generates a self-contained HTML service-design journey map using the NN/g combined customer journey + service blueprint format.",
+      "source": "./skills/journey-mapper",
+      "version": "1.0.0"
+    }
+  ]
+}
