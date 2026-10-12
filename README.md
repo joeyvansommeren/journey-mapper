@@ -128,6 +128,8 @@ A single `.html` file you can open in any browser:
 
 The visual design lives in `skills/journey-mapper/TEMPLATE.html`. Edit the CSS variables in `:root` to match your brand. The AI only ever replaces the JSON data block, so your styling changes are safe.
 
+`build.py` fills the template by finding three markers: `<title>Journey Maps</title>`, `<h1>Journey Maps</h1>`, and the `<script type="application/json" id="journeys-data">` block. Keep those as they are; the script refuses to build if one is missing.
+
 Default palette: warm stone neutrals, amber accent (`#fcd34d`), Inter typeface.
 
 ---
@@ -149,6 +151,20 @@ Via the Claude Code plugin marketplace: `/plugin marketplace update`.
 Issues are welcome — if something doesn't work, a journey type isn't covered, or you have an idea for the template, open one. I review suggestions and implement what fits.
 
 PRs: open an issue first. I keep the keys to `main` for now, but good ideas will make it in.
+
+---
+
+## Development
+
+The skill ships a small build script, `skills/journey-mapper/build.py` (Python 3.8+, standard library only). The AI writes its journey data to a JSON file and runs the script, which checks the data and fills in the template. Errors come back as a list instead of a broken page.
+
+| Command | What it does | Cost |
+|---|---|---|
+| `make check` | Unit tests for `build.py`, plus `claude plugin validate --strict` | Free |
+| `make eval-quick` | One run of each [plugin eval](https://code.claude.com/docs/en/plugin-evals) case | Real model calls, capped at $5 |
+| `make eval` | Three runs per case, with and without the skill for comparison | Real model calls, capped at $15 |
+
+The eval cases live in `evals/`. `maps-sample-app` generates a small Next.js invoicing app and checks that the skill writes a real map from it; `ignores-unrelated-request` checks the skill stays out of unrelated work.
 
 ---
 
