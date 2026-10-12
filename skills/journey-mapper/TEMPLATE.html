@@ -537,6 +537,32 @@
     transition: border-color 150ms ease, color 150ms ease;
   }
   .help-btn:hover { color: var(--text); border-color: var(--border-strong); }
+
+  /* Import modal */
+  .import-modal { max-width: 440px; }
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 20px;
+  }
+  .action-btn {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 150ms ease, border-color 150ms ease;
+  }
+  .action-btn:hover { background: var(--panel-3); }
+  .action-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .action-btn.primary { background: var(--accent); border-color: var(--focus); }
+  .action-btn.primary:hover { background: var(--focus); }
+  .action-btn.danger { color: var(--red); }
+  .import-modal.is-error .choice { display: none; }
 </style>
 </head>
 <body>
@@ -600,13 +626,31 @@
     <ul>
       <li><strong>Autosave</strong> — every edit saves to <em>this browser's</em> localStorage after a 350 ms pause. The rail shows "Saved" when it commits.</li>
       <li><strong>Export</strong> — downloads a timestamped JSON of all annotations. Back it up or send it to a teammate.</li>
-      <li><strong>Import</strong> — loads a JSON file. You'll be asked whether to <em>replace</em> your local state or <em>merge</em> a colleague's annotations into yours (safe for collaboration).</li>
+      <li><strong>Import</strong> — loads a JSON file. You'll be asked whether to <em>merge</em> a colleague's annotations into yours (field by field; where you both edited the same field, theirs wins) or <em>replace</em> your local state.</li>
     </ul>
 
     <hr class="divider" />
 
     <h3>Keyboard shortcut</h3>
     <p>Press <strong>?</strong> anywhere on the page to open or close this guide.</p>
+  </div>
+</div>
+
+<!-- Import modal -->
+<div class="modal-overlay" id="import-modal">
+  <div class="modal import-modal" role="dialog" aria-modal="true" aria-labelledby="import-title">
+    <div class="modal-header">
+      <h2 id="import-title">Import annotations</h2>
+      <button class="modal-close" id="import-modal-close" aria-label="Close">&#x2715;</button>
+    </div>
+    <p id="import-summary"></p>
+    <p class="choice"><strong>Merge</strong> adds their notes to yours. Where you both edited the same field, theirs wins.</p>
+    <p class="choice"><strong>Replace</strong> discards the notes in this browser and loads theirs instead.</p>
+    <div class="modal-actions">
+      <button class="action-btn" id="import-cancel">Cancel</button>
+      <button class="action-btn danger choice" id="import-replace">Replace mine</button>
+      <button class="action-btn primary choice" id="import-merge">Merge</button>
+    </div>
   </div>
 </div>
 
@@ -1212,6 +1256,48 @@
   });
 
   const importInput = document.getElementById("import-file");
+  const importModal = document.getElementById("import-modal");
+  const importDialog = importModal.querySelector(".import-modal");
+  const importSummary = document.getElementById("import-summary");
+  let pendingImport = null;
+
+  function openImport(summary, isError) {
+    importSummary.textContent = summary;
+    importDialog.classList.toggle("is-error", isError);
+    importModal.classList.add("open");
+    document.getElementById(isError ? "import-cancel" : "import-merge").focus();
+  }
+  function closeImport() {
+    importModal.classList.remove("open");
+    pendingImport = null;
+  }
+
+  // Merge field by field, so a colleague's edit to one field of a moment
+  // doesn't wipe your edits to the other fields of that same moment.
+  function mergeAnnotations(incoming) {
+    Object.keys(incoming).forEach(jid => {
+      const cur = ensureJourneyState(jid);
+      const inc = incoming[jid] || {};
+      cur._meta = Object.assign({}, cur._meta, inc._meta || {});
+      Object.entries(inc.moments || {}).forEach(([mid, fields]) => {
+        cur.moments[mid] = Object.assign({}, cur.moments[mid], fields);
+      });
+    });
+  }
+
+  function applyImport(mode) {
+    if (!pendingImport) return;
+    if (mode === "merge") mergeAnnotations(pendingImport);
+    else state = pendingImport;
+    closeImport();
+    saveAll(state);
+    flashSaved();
+    if (activeJourneyId) {
+      const j = data.journeys.find(x => x.id === activeJourneyId);
+      if (j) renderJourney(j);
+    }
+  }
+
   document.getElementById("import-btn").addEventListener("click", () => importInput.click());
   importInput.addEventListener("change", () => {
     const file = importInput.files[0];
@@ -1220,32 +1306,26 @@
     reader.onload = () => {
       try {
         const incoming = JSON.parse(reader.result);
-        if (typeof incoming !== "object" || incoming === null) throw new Error("Not an object");
-        if (!confirm("Replace your current annotations with the imported file? (Cancel to merge instead.)")) {
-          // Merge per-journey
-          Object.keys(incoming).forEach(jid => {
-            const cur = ensureJourneyState(jid);
-            const inc = incoming[jid] || {};
-            cur._meta = Object.assign({}, cur._meta, inc._meta || {});
-            cur.moments = Object.assign({}, cur.moments, inc.moments || {});
-          });
-        } else {
-          state = incoming;
+        if (typeof incoming !== "object" || incoming === null || Array.isArray(incoming)) {
+          throw new Error("this isn't an annotations export.");
         }
-        saveAll(state);
-        flashSaved();
-        if (activeJourneyId) {
-          const j = data.journeys.find(x => x.id === activeJourneyId);
-          if (j) renderJourney(j);
-        }
+        const journeyIds = Object.keys(incoming);
+        const matching = journeyIds.filter(jid => data.journeys.some(j => j.id === jid)).length;
+        pendingImport = incoming;
+        openImport(`${file.name} has notes for ${journeyIds.length} journey${journeyIds.length === 1 ? "" : "s"}, ${matching} of them in this map.`, false);
       } catch (e) {
-        alert("Couldn't import: " + e.message);
+        openImport(`Couldn't import ${file.name}: ${e.message}`, true);
       } finally {
         importInput.value = "";
       }
     };
     reader.readAsText(file);
   });
+  document.getElementById("import-merge").addEventListener("click", () => applyImport("merge"));
+  document.getElementById("import-replace").addEventListener("click", () => applyImport("replace"));
+  document.getElementById("import-cancel").addEventListener("click", closeImport);
+  document.getElementById("import-modal-close").addEventListener("click", closeImport);
+  importModal.addEventListener("click", e => { if (e.target === importModal) closeImport(); });
 
   // Auto-select first journey
   if (data.journeys[0]) selectJourney(data.journeys[0].id);
@@ -1263,7 +1343,7 @@
   helpModal.addEventListener("click", e => { if (e.target === helpModal) closeHelp(); });
   document.addEventListener("keydown", e => {
     if (e.key === "?" && !e.target.matches("input, textarea")) openHelp();
-    if (e.key === "Escape") closeHelp();
+    if (e.key === "Escape") { closeHelp(); closeImport(); }
   });
 })();
 </script>
