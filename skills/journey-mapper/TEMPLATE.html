@@ -98,6 +98,7 @@
     min-height: 14px;
   }
   .save-status.flash { color: var(--green); }
+  .save-status.error { color: var(--red); }
 
   .category-header {
     font-size: 11px;
@@ -825,8 +826,16 @@
     data.journeys.forEach(j => { if (legacy[j.id]) adopted[j.id] = legacy[j.id]; });
     return adopted;
   }
+  // Storage can be unavailable (private browsing, blocked site data) or full.
+  // Edits then live only in memory, so say so instead of claiming "Saved".
+  let saveFailed = false;
   function saveAll(state) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      saveFailed = false;
+    } catch {
+      saveFailed = true;
+    }
   }
   let state = loadAll();
   function ensureJourneyState(jid) {
@@ -839,6 +848,13 @@
   let saveTimer = null;
   const saveStatusEl = document.getElementById("save-status");
   function flashSaved() {
+    clearTimeout(flashSaved._t);
+    saveStatusEl.classList.remove("flash");
+    saveStatusEl.classList.toggle("error", saveFailed);
+    if (saveFailed) {
+      saveStatusEl.textContent = "Not saved: browser storage is blocked or full. Use Export to keep your edits.";
+      return;
+    }
     saveStatusEl.textContent = "Saved · " + new Date().toLocaleTimeString();
     saveStatusEl.classList.add("flash");
     clearTimeout(flashSaved._t);
