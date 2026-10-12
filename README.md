@@ -25,6 +25,8 @@ Every inferred value is flagged `[Assumption]` so you know what needs validating
 
 Update later with `/plugin marketplace update`.
 
+Plugin skills are namespaced by plugin name, so a plugin install is invoked as `/journey-mapper:journey-mapper`. Claude also picks it up automatically when you ask for a journey map.
+
 ### Claude Code — manual
 
 ```bash
@@ -32,7 +34,7 @@ git clone https://github.com/joeyvansommeren/journey-mapper
 cp -r journey-mapper/skills/journey-mapper ~/.claude/skills/journey-mapper
 ```
 
-For a personal install: use `~/.claude-personal/skills/journey-mapper` instead.
+A manual install is invoked as plain `/journey-mapper`. For a single project, copy it to `.claude/skills/journey-mapper` in that repo instead.
 
 ---
 
@@ -141,6 +143,8 @@ Open a session with a codebase in scope and run:
 ```
 /journey-mapper
 ```
+
+(Installed via the Claude Code plugin marketplace? Use `/journey-mapper:journey-mapper`.)
 
 If the codebase path isn't clear from context, the skill asks. You can also be explicit:
 

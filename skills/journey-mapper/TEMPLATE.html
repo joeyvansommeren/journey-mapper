@@ -783,7 +783,10 @@
 <script>
 (function () {
   const data = JSON.parse(document.getElementById("journeys-data").textContent);
-  const STORAGE_KEY = "journey-map-annotations";
+  // Keyed per map: browsers share localStorage across every file:// page, so a
+  // single global key made two products' maps overwrite each other's notes.
+  const STORAGE_KEY = "journey-map-annotations:" + document.title;
+  const LEGACY_STORAGE_KEY = "journey-map-annotations";
   const FEELINGS = [
     { score: 1, emoji: "\u{1F621}", label: "Very frustrated" },
     { score: 2, emoji: "\u{1F641}", label: "Frustrated" },
@@ -794,12 +797,33 @@
 
   const actorById = Object.fromEntries(data.actors.map(a => [a.id, a]));
 
+  // Titles come from scanned code and often contain component names like
+  // <SignUpForm>; escape them before they go into innerHTML.
+  function escapeHtml(value) {
+    return String(value == null ? "" : value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
   // ---- Storage ----
   function loadAll() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : {};
+      if (raw) return JSON.parse(raw);
+      return loadLegacy();
     } catch { return {}; }
+  }
+  // One-time carry-over from the old shared key. Only journeys that exist in
+  // this map are adopted, so notes from another product's map don't leak in.
+  function loadLegacy() {
+    const raw = localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (!raw) return {};
+    const legacy = JSON.parse(raw);
+    const adopted = {};
+    data.journeys.forEach(j => { if (legacy[j.id]) adopted[j.id] = legacy[j.id]; });
+    return adopted;
   }
   function saveAll(state) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -846,8 +870,8 @@
       btn.dataset.id = j.id;
       const actor = actorById[j.actor];
       btn.innerHTML = `
-        <div class="j-title">${j.title}</div>
-        <div class="j-actor">${actor ? actor.name : ""}</div>
+        <div class="j-title">${escapeHtml(j.title)}</div>
+        <div class="j-actor">${escapeHtml(actor ? actor.name : "")}</div>
       `;
       btn.addEventListener("click", () => selectJourney(j.id));
       listEl.appendChild(btn);
@@ -885,8 +909,8 @@
     const header = document.createElement("section");
     header.className = "journey-header";
     header.innerHTML = `
-      <h2>${j.title}</h2>
-      <div class="actor-line">Primary actor <span class="actor-chip">${actor.name || ""}</span></div>
+      <h2>${escapeHtml(j.title)}</h2>
+      <div class="actor-line">Primary actor <span class="actor-chip">${escapeHtml(actor.name)}</span></div>
       <div class="header-fields">
         <div class="field-block">
           <label>Scenario</label>
@@ -941,7 +965,7 @@
       momentIdx++;
       const c = document.createElement("div");
       c.className = "cell moment-header";
-      c.innerHTML = `<span class="moment-num">${momentIdx}</span>${moment.title}`;
+      c.innerHTML = `<span class="moment-num">${momentIdx}</span>${escapeHtml(moment.title)}`;
       grid.appendChild(c);
     });
 
@@ -951,7 +975,7 @@
     addFeelingRow(grid, j, allMoments);
     addEditableRow(grid, j, allMoments, "Pain points", "row-pain", "pain", "What hurts here?");
     addEditableRow(grid, j, allMoments, "Opportunities", "row-oppty", "opportunity", "What could we improve?");
-    addEditableRow(grid, j, allMoments, "Evidence", "row-evid", "evidence", "Artefacts they take away (email, doc, screen).");
+    addEditableRow(grid, j, allMoments, "Evidence", "row-evid", "evidence", "Link a source: research insight, recording, ticket.");
 
     // Divider -- line of interaction
     addDivider(grid, "Line of interaction");
@@ -1052,7 +1076,8 @@
       const picker = document.createElement("div");
       picker.className = "feeling-picker";
       const mstate = jstate.moments[moment.id] = jstate.moments[moment.id] || {};
-      const effectiveFeeling = () => (mstate.feeling != null ? mstate.feeling : moment.feeling);
+      // undefined = never touched (use the AI's score); null = cleared by the user.
+      const effectiveFeeling = () => (mstate.feeling !== undefined ? mstate.feeling : moment.feeling);
       FEELINGS.forEach(f => {
         const btn = document.createElement("button");
         btn.className = "feeling-btn" + (effectiveFeeling() === f.score ? " selected" : "");
@@ -1088,7 +1113,7 @@
     const jstate = ensureJourneyState(j.id);
     const points = allMoments.map(({ moment }, i) => {
       const stored = (jstate.moments[moment.id] || {}).feeling;
-      const f = stored != null ? stored : moment.feeling;
+      const f = stored !== undefined ? stored : moment.feeling;
       return f != null ? { x: i, score: f } : null;
     });
     const present = points.filter(Boolean);
