@@ -1106,9 +1106,13 @@
     grid.appendChild(d);
   }
 
+  // The curve is drawn in pixels at the width it has when rendered, so it is
+  // redrawn whenever that width changes (see the ResizeObserver below).
+  let lastCurve = null;
   function renderCurve(j, allMoments) {
     const body = document.getElementById("curve-body");
     if (!body) return;
+    lastCurve = { j, allMoments, width: body.clientWidth };
     body.innerHTML = "";
     const jstate = ensureJourneyState(j.id);
     const points = allMoments.map(({ moment }, i) => {
@@ -1191,6 +1195,17 @@
 
     body.appendChild(svg);
   }
+
+  let curveRedrawFrame = null;
+  new ResizeObserver(() => {
+    cancelAnimationFrame(curveRedrawFrame);
+    curveRedrawFrame = requestAnimationFrame(() => {
+      const body = document.getElementById("curve-body");
+      if (body && lastCurve && body.clientWidth !== lastCurve.width) {
+        renderCurve(lastCurve.j, lastCurve.allMoments);
+      }
+    });
+  }).observe(mainEl);
 
   function autoSize(ta) {
     ta.style.height = "auto";
