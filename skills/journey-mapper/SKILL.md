@@ -58,21 +58,24 @@ Per-moment fields to fill — every inferred value gets `[Assumption]` prefix:
 
 See `REFERENCE.md` for emotional arc heuristics and a worked example.
 
-**4. Check the JSON** before writing it:
-- Every `journey.actor` matches an `actors[].id`; every `journey.category` matches a `categories[].id`.
-- Every actor appears in at least one journey.
-- All `id` values are kebab-case and unique; `moment.id` values are unique across the whole file.
-- `feeling` is an integer 1–5, or omitted.
-- Escape every `</` inside string values as `<\/` (still valid JSON). Otherwise text such as `</script>` closes the data block early and the page renders blank.
+**4. Build the HTML with `build.py`** (in this skill's base directory, shown above when the skill loads). It validates the JSON, fills in the template, and writes the map. Do not retype `TEMPLATE.html` yourself.
+1. Write the JSON to a temporary file, e.g. `journeys.json` in your scratch or temp directory — not in the user's codebase.
+2. Run:
+   ```bash
+   python3 <skill-dir>/build.py journeys.json <output-path> --product "<Product name>"
+   ```
+3. Exit code 1 means the JSON has errors; the script lists each one and writes nothing. Fix them and run again. Warnings (missing `[Assumption]` prefixes, unused actors, counts outside the structural guidance) don't block the build, but fix the ones that matter.
+4. Keep the product name stable across regenerations of the same product — the page title keys the browser's saved annotations.
 
-**5. Generate the HTML** — copy the template, then edit it in place. Do not retype the template; it is ~1,200 lines and rewriting it by hand wastes tokens and risks drift.
-1. Copy `TEMPLATE.html` from this skill's base directory (shown above when the skill loads) to the output path, e.g. `cp <skill-dir>/TEMPLATE.html <output-path>`.
-2. In the copy, replace `<title>Journey Maps</title>` with `<title>[Product name] — Journey Maps</title>`. The title also keys the browser's saved annotations, so keep it stable across regenerations of the same product.
-3. Replace the `.rail h1` text `Journey Maps` with the product name.
-4. Replace **only** the contents of the `<script type="application/json" id="journeys-data">…</script>` block (the sample data) with your generated JSON. Do not modify anything else.
+**If Python 3 isn't available**, check and build by hand instead:
+- Every `journey.actor` and `journey.category` matches an `actors[].id` / `categories[].id`; every actor appears in at least one journey.
+- All `id` values are kebab-case and unique; `moment.id` values are unique across the whole file. `feeling` is an integer 1–5, or omitted.
+- Copy `TEMPLATE.html` to the output path (e.g. with `cp`), then edit three spots in the copy: `<title>Journey Maps</title>` → `<title>[Product name] — Journey Maps</title>`, `<h1>Journey Maps</h1>` → `<h1>[Product name]</h1>`, and the contents of the `<script type="application/json" id="journeys-data">…</script>` block → your JSON. Change nothing else.
+- In that JSON, escape every `</` inside string values as `<\/`, or text such as `</script>` ends the data block early and the page renders blank.
 
-**6. Report back:**
+**5. Report back:**
+
 - Path the file was saved to
-- Journey count · moment count · category count
+- Journey count · moment count · category count (`build.py` prints these)
 - Coverage gaps: flows or actor types with thin codebase evidence
 - 2–3 standout pain points inferred from error states, friction-heavy flows, or complex conditionals
