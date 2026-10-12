@@ -25,6 +25,8 @@ Every inferred value is flagged `[Assumption]` so you know what needs validating
 
 Update later with `/plugin marketplace update`.
 
+Plugin skills are namespaced by plugin name, so a plugin install is invoked as `/journey-mapper:journey-mapper`. Claude also picks it up automatically when you ask for a journey map.
+
 ### Claude Code — manual
 
 ```bash
@@ -32,105 +34,58 @@ git clone https://github.com/joeyvansommeren/journey-mapper
 cp -r journey-mapper/skills/journey-mapper ~/.claude/skills/journey-mapper
 ```
 
-For a personal install: use `~/.claude-personal/skills/journey-mapper` instead.
+A manual install is invoked as plain `/journey-mapper`. For a single project, copy it to `.claude/skills/journey-mapper` in that repo instead.
 
 ---
 
-### OpenCode
+### Other agents — Codex, Cursor, OpenCode, Gemini CLI, GitHub Copilot, Windsurf
 
-Drop the skill files into your global commands directory:
-
-```bash
-git clone https://github.com/joeyvansommeren/journey-mapper
-cp -r journey-mapper/skills/journey-mapper ~/.config/opencode/commands/journey-mapper
-```
-
-Invoke with `/journey-mapper` in the OpenCode TUI.
-
-For project-level install, copy to `.opencode/commands/journey-mapper` in your repo root instead.
-
----
-
-### Codex CLI (OpenAI)
+These tools all read [Agent Skills](https://agentskills.io) folders natively, and all of them look in the shared `.agents/skills` location. One copy covers every one of them:
 
 ```bash
 git clone https://github.com/joeyvansommeren/journey-mapper
-cp journey-mapper/skills/journey-mapper/SKILL.md ~/.codex/prompts/journey-mapper.md
-cp journey-mapper/skills/journey-mapper/TEMPLATE.html ~/.codex/
-cp journey-mapper/skills/journey-mapper/REFERENCE.md ~/.codex/
+mkdir -p ~/.agents/skills
+cp -r journey-mapper/skills/journey-mapper ~/.agents/skills/journey-mapper
 ```
 
-Invoke with `/journey-mapper` in Codex. Note: Codex only reads top-level `.md` files from `~/.codex/prompts/` — the SKILL.md references TEMPLATE.html by path, so keep both in `~/.codex/`.
+For a single project, copy it to `.agents/skills/journey-mapper` in that repo instead. Keep `REFERENCE.md` and `TEMPLATE.html` next to `SKILL.md` — the skill refers to them by relative path.
 
----
+| Tool | How to invoke |
+|---|---|
+| Codex CLI | `$journey-mapper`, or pick it from `/skills` |
+| Cursor | `/journey-mapper` in Agent chat |
+| OpenCode | Ask for a journey map — it loads the skill automatically |
+| Gemini CLI | Ask for a journey map and confirm activation; check with `/skills list` |
+| GitHub Copilot (CLI and VS Code agent mode) | Mention `/journey-mapper` in your prompt; run `/skills reload` after installing |
+| Windsurf / Devin Desktop (Cascade) | `@journey-mapper` |
 
-### Cursor
-
-```bash
-git clone https://github.com/joeyvansommeren/journey-mapper
-cp -r journey-mapper/skills/journey-mapper ~/.cursor/commands/journey-mapper
-```
-
-Invoke by typing `/journey-mapper` in the Agent input. Cursor will show it in the dropdown.
-
-For project-level: copy to `.cursor/commands/journey-mapper` in your repo root.
-
----
-
-### Windsurf
-
-```bash
-git clone https://github.com/joeyvansommeren/journey-mapper
-cp -r journey-mapper/skills/journey-mapper ~/.codeium/windsurf/global_workflows/journey-mapper
-```
-
-Invoke with `/journey-mapper` in Cascade.
-
-For project-level: copy to `.windsurf/workflows/journey-mapper` in your repo root.
+Every tool also triggers the skill on its own when you ask for a journey map or service blueprint.
 
 ---
 
 ### Continue.dev
 
-```bash
-git clone https://github.com/joeyvansommeren/journey-mapper
-mkdir -p ~/.continue/prompts
-cp journey-mapper/skills/journey-mapper/SKILL.md ~/.continue/prompts/journey-mapper.prompt
-cp journey-mapper/skills/journey-mapper/TEMPLATE.html ~/.continue/
-cp journey-mapper/skills/journey-mapper/REFERENCE.md ~/.continue/
-```
-
-Invoke with `/journey-mapper` in the Continue sidebar.
-
----
-
-### Gemini CLI
+Continue reads skill folders from its own directory rather than `.agents/skills`:
 
 ```bash
-git clone https://github.com/joeyvansommeren/journey-mapper
-mkdir -p ~/.gemini/commands
+mkdir -p ~/.continue/skills
+cp -r journey-mapper/skills/journey-mapper ~/.continue/skills/journey-mapper
 ```
 
-Create `~/.gemini/commands/journey-mapper.toml`:
-
-```toml
-description = "Scans a codebase and generates a self-contained HTML service-design journey map."
-prompt = """
-[paste the contents of skills/journey-mapper/SKILL.md here]
-"""
-```
-
-Invoke with `/journey-mapper` in Gemini CLI.
+For a single project, use `.continue/skills/journey-mapper`.
 
 ---
 
 ### Aider
 
-Aider does not support custom slash commands. Use `/load` to run the skill as a prompt file:
+Aider has no skill support. Load the skill files read-only instead:
 
 ```bash
-/load path/to/journey-mapper/skills/journey-mapper/SKILL.md
+aider --read path/to/journey-mapper/skills/journey-mapper/SKILL.md \
+      --read path/to/journey-mapper/skills/journey-mapper/REFERENCE.md
 ```
+
+Then ask for a journey map, and point Aider at `TEMPLATE.html` in the same folder.
 
 ---
 
@@ -141,6 +96,8 @@ Open a session with a codebase in scope and run:
 ```
 /journey-mapper
 ```
+
+(Installed via the Claude Code plugin marketplace? Use `/journey-mapper:journey-mapper`.)
 
 If the codebase path isn't clear from context, the skill asks. You can also be explicit:
 
@@ -180,7 +137,7 @@ Default palette: warm stone neutrals, amber accent (`#fcd34d`), Inter typeface.
 ```bash
 cd ~/wherever-you-cloned-it
 git pull
-cp -r skills/journey-mapper ~/.claude/skills/journey-mapper   # adjust path for your agent
+cp -r skills/journey-mapper ~/.agents/skills/journey-mapper   # or ~/.claude/skills for Claude Code
 ```
 
 Via the Claude Code plugin marketplace: `/plugin marketplace update`.

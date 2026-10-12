@@ -49,7 +49,8 @@
 
 **Schema rules:**
 - All `id` values must be unique within their array and use kebab-case.
-- `moment.id` values must be stable — they key user annotations in localStorage. Do not change them after first publish.
+- `moment.id` values must be unique across the whole file and stable — they key user annotations in localStorage. Do not change them after first publish.
+- Escape `</` as `<\/` inside string values so text like `</script>` can't close the data block.
 - `feeling` is an integer 1–5. Omit the field entirely if unknown (renders as unset).
 - Set `evidence` to `""` — leave it for the human to fill from real research.
 - Every inferred value must be prefixed with `[Assumption]` so the human knows what needs validation.

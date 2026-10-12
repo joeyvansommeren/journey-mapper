@@ -58,14 +58,20 @@ Per-moment fields to fill — every inferred value gets `[Assumption]` prefix:
 
 See `REFERENCE.md` for emotional arc heuristics and a worked example.
 
-**4. Generate the HTML:**
-1. Read `TEMPLATE.html` from this skill's base directory (shown above when skill loads).
-2. Replace `<title>Journey Maps</title>` with `<title>[Product name] — Journey Maps</title>`.
-3. Replace the `.rail h1` text `Journey Maps` with the product name.
-4. Replace **only** the `<script type="application/json" id="journeys-data">…</script>` block with your generated JSON.
-5. Write the complete file to the output path. Do not modify anything else in the template.
+**4. Check the JSON** before writing it:
+- Every `journey.actor` matches an `actors[].id`; every `journey.category` matches a `categories[].id`.
+- Every actor appears in at least one journey.
+- All `id` values are kebab-case and unique; `moment.id` values are unique across the whole file.
+- `feeling` is an integer 1–5, or omitted.
+- Escape every `</` inside string values as `<\/` (still valid JSON). Otherwise text such as `</script>` closes the data block early and the page renders blank.
 
-**5. Report back:**
+**5. Generate the HTML** — copy the template, then edit it in place. Do not retype the template; it is ~1,200 lines and rewriting it by hand wastes tokens and risks drift.
+1. Copy `TEMPLATE.html` from this skill's base directory (shown above when the skill loads) to the output path, e.g. `cp <skill-dir>/TEMPLATE.html <output-path>`.
+2. In the copy, replace `<title>Journey Maps</title>` with `<title>[Product name] — Journey Maps</title>`. The title also keys the browser's saved annotations, so keep it stable across regenerations of the same product.
+3. Replace the `.rail h1` text `Journey Maps` with the product name.
+4. Replace **only** the contents of the `<script type="application/json" id="journeys-data">…</script>` block (the sample data) with your generated JSON. Do not modify anything else.
+
+**6. Report back:**
 - Path the file was saved to
 - Journey count · moment count · category count
 - Coverage gaps: flows or actor types with thin codebase evidence
